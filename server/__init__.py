@@ -4,12 +4,12 @@ import globus_sdk
 import json
 import posixpath
 import requests
-from girder import events, plugin
+from girder import events
 from girder.api import access, rest
 from girder.constants import AccessType
 from girder.exceptions import RestException
 from girder.models.user import User
-from girder_oauth.providers import Globus
+from girder.plugins.oauth.providers import Globus
 
 
 def _globusFolder(id, name, path):
@@ -223,31 +223,28 @@ def _saveGlobusToken(event):
         }, multi=False)
 
 
-class GirderPlugin(plugin.GirderPlugin):
-    DISPLAY_NAME = 'Globus endpoints'
+def load(info):
+    # plugin.getPlugin('oauth').load(info)
 
-    def load(self, info):
-        plugin.getPlugin('oauth').load(info)
+    name = 'globus_endpoints'
+    events.bind('rest.get.item.before', name, _globusChildItems)
+    events.bind('rest.get.file/:id/download.before', name, _globusFileDownload)
+    events.bind('rest.get.folder.before', name, _globusChildFolders)
+    events.bind('rest.get.folder/:id.before', name, _globusFolderInfo)
+    events.bind('rest.get.folder/:id/details.before', name, _globusFolderDetails)
+    events.bind('rest.get.item/:id.before', name, _globusItemInfo)
+    events.bind('rest.get.item/:id/download.before', name, _globusFileDownload)
+    events.bind('rest.get.item/:id/files.before', name, _globusFileList)
+    events.bind('oauth.auth_callback.after', name, _saveGlobusToken)
+    # TODO folder rootpath
+    # TODO item rootpath
+    # TODO file GET
+    # TODO file download
+    # TODO item download
 
-        name = 'globus_endpoints'
-        events.bind('rest.get.item.before', name, _globusChildItems)
-        events.bind('rest.get.file/:id/download.before', name, _globusFileDownload)
-        events.bind('rest.get.folder.before', name, _globusChildFolders)
-        events.bind('rest.get.folder/:id.before', name, _globusFolderInfo)
-        events.bind('rest.get.folder/:id/details.before', name, _globusFolderDetails)
-        events.bind('rest.get.item/:id.before', name, _globusItemInfo)
-        events.bind('rest.get.item/:id/download.before', name, _globusFileDownload)
-        events.bind('rest.get.item/:id/files.before', name, _globusFileList)
-        events.bind('oauth.auth_callback.after', name, _saveGlobusToken)
-        # TODO folder rootpath
-        # TODO item rootpath
-        # TODO file GET
-        # TODO file download
-        # TODO item download
+    Globus._AUTH_SCOPES += [
+        'urn:globus:auth:scope:transfer.api.globus.org:all',
+        'https://auth.globus.org/scopes/56ceac29-e98a-440a-a594-b41e7a084b62/all'  # petrel RS
+    ]
 
-        Globus._AUTH_SCOPES += [
-            'urn:globus:auth:scope:transfer.api.globus.org:all',
-            'https://auth.globus.org/scopes/56ceac29-e98a-440a-a594-b41e7a084b62/all'  # petrel RS
-        ]
-
-        # TODO change access_type from 'online' to 'offline' to get a refresh token
+    # TODO change access_type from 'online' to 'offline' to get a refresh token

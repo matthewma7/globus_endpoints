@@ -1,0 +1,8 @@
+{
+    "name": "globus_endpoints",
+    "description": "",
+    "version": "0.1.0",
+    "dependencies": [
+        "oauth"
+    ]
+}

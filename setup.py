@@ -7,7 +7,6 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'girder>=3.0.0a1',
     'globus-sdk'
 ]
 
@@ -34,10 +33,5 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/girder/globus_endpoints',
     version='0.1.0',
-    zip_safe=False,
-    entry_points={
-        'girder.plugin': [
-            'globus_endpoints = globus_endpoints:GirderPlugin'
-        ]
-    }
+    zip_safe=False
 )
